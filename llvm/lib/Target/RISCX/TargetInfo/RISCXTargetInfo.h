@@ -7,7 +7,6 @@ class Target;
 
 Target &getTheRISCXTarget();
 
-} // end namespace llvm
+} // namespace llvm
 
 #endif // LLVM_LIB_TARGET_RISCX_TARGETINFO_RISCXTARGETINFO_H
-

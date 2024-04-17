@@ -1,0 +1,156 @@
+int allCells[5000]
+int swapCells[5000]
+
+
+int function makeColor(int r, int g, int b) {
+    int a = 255
+    int outColor = 0
+          
+    outColor = outColor | ((a & 255) << 24)
+    outColor = outColor | ((r & 255) << 16)
+    outColor = outColor | ((g & 255) << 8)
+    outColor = outColor | ((b & 255) << 0)
+    return outColor
+}
+
+
+void function paintCellPixels(int cellX, int cellY, int color) {
+    int winXStart = cellX * 16 + 1
+    int winYStart = cellY * 16 + 1
+    int winXEnd = cellX * 16 + 16 - 1
+    int winYEnd = cellY * 16 + 16 - 1
+
+    for (int winY = winYStart; winY < winYEnd; winY = winY + 1) {
+        for (int winX = winXStart; winX < winXEnd; winX = winX + 1) {
+            PUT_PIXEL(winX, winY, color)
+        }
+    }
+    return
+}
+
+
+void function initCells() {
+    for (int j = 0; j < 50; j = j + 1) {
+        for (int i = 0; i < 50; i = i + 1) {
+            int val = RAND()
+
+            if ((val % 31) == 0) {
+                allCells[2 * (i + j * 50)] = 1
+                allCells[2 * (i + j * 50) + 1] = 1
+
+                int cellColor = makeColor(0, 255, 0)
+                paintCellPixels(i, j, cellColor)
+            }
+        }
+    }
+    return
+}
+
+
+void function updatePixels() {
+    for (int j = 0; j < 50; j = j + 1) {
+        for (int i = 0; i < 50; i = i + 1) {
+            int currentCellIdx = i + j * 50
+
+            int idxLeft   = (i - 1 + 50) % 50
+            int idxMidX   = (i + 0) % 50
+            int idxRight  = (i + 1) % 50
+
+            int idxBottom = (j - 1 + 50) % 50
+            int idxMidY   = (j + 0) % 50
+            int idxUp     = (j + 1) % 50
+
+
+            int neighbStates[8]
+            neighbStates[0] = allCells[2 * (idxLeft  + idxBottom * 50)]
+            neighbStates[1] = allCells[2 * (idxLeft  + idxMidY   * 50)]
+            neighbStates[2] = allCells[2 * (idxLeft  + idxUp     * 50)]
+
+            neighbStates[3] = allCells[2 * (idxMidX  + idxBottom * 50)]
+            neighbStates[4] = allCells[2 * (idxMidX  + idxUp     * 50)]
+
+            neighbStates[5] = allCells[2 * (idxRight + idxBottom * 50)]
+            neighbStates[6] = allCells[2 * (idxRight + idxMidY   * 50)]
+            neighbStates[7] = allCells[2 * (idxRight + idxUp     * 50)]
+
+            int numNeighbourAlive = 0
+            for(int k = 0; k < 8; k = k + 1) {
+                if(neighbStates[k] == 1) {
+                    numNeighbourAlive = numNeighbourAlive + 1
+                }
+            }
+
+            if (allCells[2 * currentCellIdx] == 1) {
+                if ((numNeighbourAlive == 0) || ((numNeighbourAlive == 3) || ((numNeighbourAlive == 4) || (numNeighbourAlive == 5)))) {
+                    swapCells[2 * currentCellIdx] = 1
+                    swapCells[2 * currentCellIdx + 1] = allCells[2 * currentCellIdx + 1] + 1
+                }
+                else {
+                    swapCells[2 * currentCellIdx] = 0
+                    swapCells[2 * currentCellIdx + 1] = 0
+                }
+            }
+            else {
+                if (numNeighbourAlive == 2) {
+                    swapCells[2 * currentCellIdx] = 1
+                    swapCells[2 * currentCellIdx + 1] = 1
+                }
+                else {
+                    swapCells[2 * currentCellIdx] = 0
+                    swapCells[2 * currentCellIdx + 1] = 0
+                }
+            }
+        }
+    }
+
+    for (int j = 0; j < 50; j = j + 1) {
+        for (int i = 0; i < 50; i = i + 1) {
+            int currentCellIdx = i + j * 50
+
+            allCells[2 * currentCellIdx] = swapCells[2 * currentCellIdx]
+            allCells[2 * currentCellIdx + 1] = swapCells[2 * currentCellIdx + 1]
+
+            int cellColor = 0
+            if (allCells[2 * currentCellIdx + 1] == 10) {
+                allCells[2 * currentCellIdx] = 0
+                allCells[2 * currentCellIdx + 1] = 0
+            }
+
+            if (allCells[2 * currentCellIdx] == 1) {
+                int currGeneration = allCells[2 * currentCellIdx + 1]
+
+                int r = 0
+                int g = 0
+                int b = 0
+                if (currGeneration > 6) {
+                    r = 127 - 2 * (10 - currGeneration)
+                }
+                if (currGeneration < 5) {
+                    g = 255 / allCells[2 * currentCellIdx + 1]
+                }
+                if ((currGeneration >= 5) && (currGeneration <= 6)) {
+                    b = 127
+                }
+
+                cellColor = makeColor(r, g, b)
+            }
+
+            paintCellPixels(i, j, cellColor)
+        }
+    }
+    return
+}
+
+
+
+void function app() {
+    
+    initCells()
+    FLUSH()
+
+    while (1) {
+        updatePixels()
+        FLUSH()
+    }
+    return
+}

@@ -1,0 +1,9 @@
+int function app() {
+    int i = 1
+    int x = 1
+    while (i < 10) {
+        x = x * i
+        i = i + 1   
+    }
+    return x
+}

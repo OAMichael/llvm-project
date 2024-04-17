@@ -8,4 +8,3 @@ add_llvm_component_library(LLVMRISCXInfo
   ADD_TO_COMPONENT
   RISCX
   )
-
