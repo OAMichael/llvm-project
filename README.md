@@ -1,44 +1,54 @@
-# The LLVM Compiler Infrastructure
+# LLVM Backend for RISC-X
 
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/llvm/llvm-project/badge)](https://securityscorecards.dev/viewer/?uri=github.com/llvm/llvm-project)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8273/badge)](https://www.bestpractices.dev/projects/8273)
-[![libc++](https://github.com/llvm/llvm-project/actions/workflows/libcxx-build-and-test.yaml/badge.svg?branch=main&event=schedule)](https://github.com/llvm/llvm-project/actions/workflows/libcxx-build-and-test.yaml?query=event%3Aschedule)
+## Build
+### Execute these commands:
+```
+cmake -S llvm -B build -G Ninja -DLLVM_ENABLE_PROJECTS='clang' -DCMAKE_BUILD_TYPE=Release -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_TARGETS_TO_BUILD=RISCX
+```
+```
+cmake --build build -j 8
+```
 
-Welcome to the LLVM project!
+### Or you can call `make_riscx.sh` script which does exactly these lines:
+```
+sh make_riscx.sh
+```
 
-This repository contains the source code for LLVM, a toolkit for the
-construction of highly optimized compilers, optimizers, and run-time
-environments.
+## Testing
+### You can find some tests for backend in folder `riscx-tests`
+### They include frontend and backend tests
+### Frontend translates custom language `*.lang` to LLVM IR files `*.ll`. Backend converts LLVM IR `*.ll` files to machine code binary files. These can be simulated through Emulator.
+### Here is the biggest part of the whole pipeline (excluding frontend by now):
+```
+./build/bin/llc ./riscx-tests/backend/App.ll -o App.o -march=riscx -filetype=obj
+```
+```
+ld.lld App.o -o App --entry=app
+```
 
-The LLVM project has multiple components. The core of the project is
-itself called "LLVM". This contains all of the tools, libraries, and header
-files needed to process intermediate representations and convert them into
-object files. Tools include an assembler, disassembler, bitcode analyzer, and
-bitcode optimizer.
+### Now you have binary ELF file which can be executed on the Emulator
 
-C-like languages use the [Clang](http://clang.llvm.org/) frontend. This
-component compiles C, C++, Objective-C, and Objective-C++ code into LLVM bitcode
--- and from there into object files, using LLVM.
+```
+git submodule update --init --recursive
+cd Emulator
+cmake -B build -DCMAKE_BUILD_TYPE=Release .
+cmake --build build -j 8
+```
 
-Other components include:
-the [libc++ C++ standard library](https://libcxx.llvm.org),
-the [LLD linker](https://lld.llvm.org), and more.
+```
+cd build
+```
+```
+./risc-v ../../App
+```
 
-## Getting the Source Code and Building LLVM
 
-Consult the
-[Getting Started with LLVM](https://llvm.org/docs/GettingStarted.html#getting-the-source-code-and-building-llvm)
-page for information on building and running LLVM.
+### Compiling and simulating other tests is exactly the same
 
-For information on how to contribute to the LLVM project, please take a look at
-the [Contributing to LLVM](https://llvm.org/docs/Contributing.html) guide.
-
-## Getting in touch
-
-Join the [LLVM Discourse forums](https://discourse.llvm.org/), [Discord
-chat](https://discord.gg/xS7Z362),
-[LLVM Office Hours](https://llvm.org/docs/GettingInvolved.html#office-hours) or
-[Regular sync-ups](https://llvm.org/docs/GettingInvolved.html#online-sync-ups).
-
-The LLVM project has adopted a [code of conduct](https://llvm.org/docs/CodeOfConduct.html) for
-participants to all modes of communication within the project.
+## In case you want to read instructions by yourself, you can also produce human-readable assembly file:
+```
+./build/bin/llc ./riscx-tests/backend/App.ll -o App.s -march=riscx -filetype=asm
+```
+```
+cat App.s
+```

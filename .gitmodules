@@ -1,0 +1,3 @@
+[submodule "Emulator"]
+	path = Emulator
+	url = https://github.com/MIPT-2023-RISC-V-Emulator-Team/Emulator.git
