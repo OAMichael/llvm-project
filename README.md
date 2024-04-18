@@ -11,7 +11,7 @@ cmake --build build -j 8
 
 ### Or you can call `make_riscx.sh` script which does exactly these lines:
 ```
-sh make_riscx.sh
+./make_riscx.sh
 ```
 
 ## Testing
@@ -51,4 +51,10 @@ cd build
 ```
 ```
 cat App.s
+```
+
+## Running full pipeline
+### You can run full pipeline of `Frontend -> LLVM IR -> Backend -> Machine Code -> Binary file -> Simulator` by executing `full_pipeline.sh`:
+```
+./full_pipeline.sh
 ```

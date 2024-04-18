@@ -1,3 +1,6 @@
 [submodule "Emulator"]
 	path = Emulator
 	url = https://github.com/MIPT-2023-RISC-V-Emulator-Team/Emulator.git
+[submodule "LLVM-Course"]
+	path = LLVM-Course
+	url = https://github.com/OAMichael/LLVM-Course.git
