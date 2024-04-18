@@ -1,0 +1,5 @@
+BUILTIN(putPixel, "viii", "nc")
+BUILTIN(flush, "v", "nc")
+BUILTIN(rand, "i", "nc")
+
+#undef BUILTIN

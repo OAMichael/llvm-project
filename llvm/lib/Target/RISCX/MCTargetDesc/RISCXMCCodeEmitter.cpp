@@ -68,28 +68,6 @@ void RISCXMCCodeEmitter::expandFunctionCall(const MCInst &MI,
   uint32_t Binary{};
   unsigned Opcode = MI.getOpcode();
 
-  // Handle SIM_...
-  switch (Opcode) {
-  default:
-    break;
-  case RISCX::PseudoSimPutPixel:
-    Opcode = RISCX::SIM_PUT_PIXEL;
-    break;
-  case RISCX::PseudoSimFlush:
-    Opcode = RISCX::SIM_FLUSH;
-    break;
-  case RISCX::PseudoSimRand:
-    Opcode = RISCX::SIM_RAND;
-    break;
-  }
-
-  if (Opcode == RISCX::SIM_PUT_PIXEL || Opcode == RISCX::SIM_FLUSH || Opcode == RISCX::SIM_RAND) {
-    TmpInst = MCInstBuilder(Opcode);
-    Binary = getBinaryCodeForInstr(TmpInst, Fixups, STI);
-    support::endian::write(CB, Binary, llvm::endianness::little);
-    return;
-  }
-
   MCOperand Func;
   MCRegister Ra;
   if (Opcode == RISCX::PseudoCALL) {
@@ -123,9 +101,6 @@ void RISCXMCCodeEmitter::encodeInstruction(const MCInst &MI,
     break;
   case RISCX::PseudoCALL:
   case RISCX::PseudoJump:
-  case RISCX::PseudoSimPutPixel:
-  case RISCX::PseudoSimFlush:
-  case RISCX::PseudoSimRand:
     expandFunctionCall(MI, CB, Fixups, STI);
     return;
   }

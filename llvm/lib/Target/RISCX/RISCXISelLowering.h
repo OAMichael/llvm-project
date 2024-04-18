@@ -18,10 +18,6 @@ enum NodeType : unsigned {
   RET_GLUE,
   CALL,
 
-  SIM_PUT_PIXEL,
-  SIM_FLUSH,
-  SIM_RAND,
-
   SELECT_CC,
   BR_CC,
   ADD_LO,

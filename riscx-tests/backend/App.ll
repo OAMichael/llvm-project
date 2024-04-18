@@ -4,11 +4,11 @@ source_filename = "top"
 @allCells = internal global [5000 x i32] zeroinitializer, align 16
 @swapCells = internal global [5000 x i32] zeroinitializer, align 16
 
-declare void @simPutPixel(i32, i32, i32)
+declare void @llvm.riscx.putpixel(i32, i32, i32)
 
-declare void @simFlush()
+declare void @llvm.riscx.flush()
 
-declare i32 @simRand()
+declare i32 @llvm.riscx.rand()
 
 define i32 @makeColor(i32 %0, i32 %1, i32 %2) {
 BB_1:
@@ -148,7 +148,7 @@ BB_7:                                             ; preds = %BB_6
   %55 = load i32, i32* %54
   %56 = getelementptr i32, i32* %5, i32 0
   %57 = load i32, i32* %56
-  call void @simPutPixel(i32 %53, i32 %55, i32 %57)
+  call void @llvm.riscx.putpixel(i32 %53, i32 %55, i32 %57)
   br label %BB_8
 
 BB_8:                                             ; preds = %BB_7
@@ -202,7 +202,7 @@ BB_6:                                             ; preds = %BB_8, %BB_3
   br i1 %15, label %BB_7, label %BB_9
 
 BB_7:                                             ; preds = %BB_6
-  %16 = call i32 @simRand()
+  %16 = call i32 @llvm.riscx.rand()
   %17 = alloca i32
   store i32 %16, i32* %17
   %18 = getelementptr i32, i32* %17, i32 0
@@ -828,7 +828,7 @@ BB_42:                                            ; preds = %BB_41, %BB_40
 define void @app() {
 BB_1:
   call void @initCells()
-  call void @simFlush()
+  call void @llvm.riscx.flush()
   br label %BB_2
 
 BB_2:                                             ; preds = %BB_3, %BB_1
@@ -836,7 +836,7 @@ BB_2:                                             ; preds = %BB_3, %BB_1
 
 BB_3:                                             ; preds = %BB_2
   call void @updatePixels()
-  call void @simFlush()
+  call void @llvm.riscx.flush()
   br label %BB_2
 
 BB_4:                                             ; preds = %BB_2

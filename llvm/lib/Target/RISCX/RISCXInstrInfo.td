@@ -36,11 +36,6 @@ def riscx_remuw     : SDNode<"RISCXISD::REMUW", SDT_RISCXIntBinOpW>;
 def riscx_add_lo    : SDNode<"RISCXISD::ADD_LO", SDTIntBinOp>;
 def riscx_hi        : SDNode<"RISCXISD::HI", SDTIntUnaryOp>;
 
-def riscx_sim_put_pixel : SDNode<"RISCXISD::SIM_PUT_PIXEL", SDT_RISCXCall, [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue, SDNPVariadic]>;
-def riscx_sim_flush     : SDNode<"RISCXISD::SIM_FLUSH", SDT_RISCXCall, [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue, SDNPVariadic]>;
-def riscx_sim_rand      : SDNode<"RISCXISD::SIM_RAND", SDT_RISCXCall, [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue, SDNPVariadic]>;
-
-
 class ImmAsmOperand<string prefix, int width, string suffix> : AsmOperandClass {
   let Name = prefix # "Imm" # width # suffix;
   let RenderMethod = "addImmOperands";
@@ -377,25 +372,15 @@ def DIVUW   : ALUW_rr<0b0000001, 0b101, "divuw">;
 def REMW    : ALUW_rr<0b0000001, 0b110, "remw">;
 def REMUW   : ALUW_rr<0b0000001, 0b111, "remuw">;
 
-let hasSideEffects = 1, mayLoad = 0, mayStore = 0 in {
-def SIM_PUT_PIXEL : RXInstI<0b000, OPC_SIM_PUT_PIXEL , (outs), (ins), "sim.put.pixel", ""> {
-  let rs1 = 0;
-  let rd = 0;
-  let imm12 = 0;
-}
+// Sim put pixel
+def PUT_PIXEL : RXInst<OPC_PUT_PIXEL, (outs), (ins GPR:$rs1, GPR:$rs2, GPR:$rs3),
+                       "put.pixel", "$rs1 $rs2 $rs3", [(int_riscx_putpixel GPR:$rs1, GPR:$rs2, GPR:$rs3)], InstFormatOther>;
 
-def SIM_FLUSH : RXInstI<0b000, OPC_SIM_FLUSH , (outs), (ins), "sim.flush", ""> {
-  let rs1 = 0;
-  let rd = 0;
-  let imm12 = 0;
-}
+// Sim flush
+def FLUSH : RXInst<OPC_FLUSH, (outs), (ins), "flush", "", [(int_riscx_flush)], InstFormatOther>;
 
-def SIM_RAND : RXInstI<0b000, OPC_SIM_RAND , (outs), (ins), "sim.rand", ""> {
-  let rs1 = 0;
-  let rd = 0;
-  let imm12 = 0;
-}
-} // hasSideEffects = 1, mayLoad = 0, mayStore = 0
+// Sim rand
+def RAND : RXInst<OPC_RAND, (outs GPR:$rd), (ins), "rand", "$rd", [(set GPR:$rd, (int_riscx_rand))], InstFormatOther>;
 
 def LWU   : Load_ri<0b110, "lwu">;
 def LD    : Load_ri<0b011, "ld">;
@@ -576,12 +561,6 @@ def PseudoBR : Pseudo<(outs), (ins simm21_lsb0_jal:$imm20), [(br bb:$imm20)]>, P
 let isCall = 1, Defs = [X1], isCodeGenOnly = 0, Size = 8 in
 def PseudoCALL : Pseudo<(outs), (ins call_symbol:$func), [], "call", "$func">;
 
-let isCall = 1, Defs = [X1], isCodeGenOnly = 0, Size = 4, hasSideEffects = 1, mayStore = 0, mayLoad = 0 in {
-def PseudoSimPutPixel : Pseudo<(outs), (ins call_symbol:$func), [], "call.sim", "simPutPixel">;
-def PseudoSimFlush    : Pseudo<(outs), (ins call_symbol:$func), [], "call.sim", "simFlush">;
-def PseudoSimRand     : Pseudo<(outs), (ins call_symbol:$func), [], "call.sim", "simRand">;
-}
-
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def PseudoRET : Pseudo<(outs), (ins), [(riscx_ret_glue)]>, PseudoInstExpansion<(JALR X0, X1, 0)>;
 
@@ -746,10 +725,6 @@ def : Pat<(XLenVT (setne (XLenVT GPR:$rs1), -1)), (SLTIU GPR:$rs1, -1)>;
 
 def : Pat<(riscx_call tglobaladdr:$func), (PseudoCALL tglobaladdr:$func)>;
 def : Pat<(riscx_call texternalsym:$func), (PseudoCALL texternalsym:$func)>;
-
-def : Pat<(riscx_sim_put_pixel tglobaladdr:$func),  (PseudoSimPutPixel tglobaladdr:$func)>;
-def : Pat<(riscx_sim_flush tglobaladdr:$func),      (PseudoSimFlush tglobaladdr:$func)>;
-def : Pat<(riscx_sim_rand tglobaladdr:$func),       (PseudoSimRand tglobaladdr:$func)>;
 
 def : Pat<(i64 (and GPR:$rs1, 0xffffffff)), (SRLI (SLLI GPR:$rs1, 32), 32)>;
 def : Pat<(i64 (shl (and GPR:$rs1, 0xffffffff), uimm5:$shamt)), (SRLI (SLLI GPR:$rs1, 32), (ImmSubFrom32 uimm5:$shamt))>;

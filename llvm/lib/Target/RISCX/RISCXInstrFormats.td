@@ -15,24 +15,24 @@ class RISCXOpcode<string name, bits<7> val> {
   bits<7> Value = val;
 }
 
-def OPC_LOAD            : RISCXOpcode<"LOAD",           0b0000011>;
-def OPC_MISC_MEM        : RISCXOpcode<"MISC_MEM",       0b0001111>;
-def OPC_OP_IMM          : RISCXOpcode<"OP_IMM",         0b0010011>;
-def OPC_AUIPC           : RISCXOpcode<"AUIPC",          0b0010111>;
-def OPC_OP_IMM_32       : RISCXOpcode<"OP_IMM_32",      0b0011011>;
-def OPC_STORE           : RISCXOpcode<"STORE",          0b0100011>;
-def OPC_OP              : RISCXOpcode<"OP",             0b0110011>;
-def OPC_LUI             : RISCXOpcode<"LUI",            0b0110111>;
-def OPC_OP_32           : RISCXOpcode<"OP_32",          0b0111011>;
-def OPC_BRANCH          : RISCXOpcode<"BRANCH",         0b1100011>;
-def OPC_JALR            : RISCXOpcode<"JALR",           0b1100111>;
-def OPC_JAL             : RISCXOpcode<"JAL",            0b1101111>;
-def OPC_OP_P            : RISCXOpcode<"OP_P",           0b1110111>;
-def OPC_SIM_PUT_PIXEL   : RISCXOpcode<"SIM_PUT_PIXEL",  0b0101011>;
-def OPC_SIM_FLUSH       : RISCXOpcode<"SIM_FLUSH",      0b1011011>;
-def OPC_SIM_RAND        : RISCXOpcode<"SIM_RAND",       0b1111011>;
+def OPC_LOAD      : RISCXOpcode<"LOAD",       0b0000011>;
+def OPC_MISC_MEM  : RISCXOpcode<"MISC_MEM",   0b0001111>;
+def OPC_OP_IMM    : RISCXOpcode<"OP_IMM",     0b0010011>;
+def OPC_AUIPC     : RISCXOpcode<"AUIPC",      0b0010111>;
+def OPC_OP_IMM_32 : RISCXOpcode<"OP_IMM_32",  0b0011011>;
+def OPC_STORE     : RISCXOpcode<"STORE",      0b0100011>;
+def OPC_OP        : RISCXOpcode<"OP",         0b0110011>;
+def OPC_LUI       : RISCXOpcode<"LUI",        0b0110111>;
+def OPC_OP_32     : RISCXOpcode<"OP_32",      0b0111011>;
+def OPC_BRANCH    : RISCXOpcode<"BRANCH",     0b1100011>;
+def OPC_JALR      : RISCXOpcode<"JALR",       0b1100111>;
+def OPC_JAL       : RISCXOpcode<"JAL",        0b1101111>;
+def OPC_OP_P      : RISCXOpcode<"OP_P",       0b1110111>;
+def OPC_PUT_PIXEL : RISCXOpcode<"PUT_PIXEL",  0b0101011>;
+def OPC_FLUSH     : RISCXOpcode<"FLUSH",      0b1011011>;
+def OPC_RAND      : RISCXOpcode<"RAND",       0b1111011>;
 
-class RXInst<dag outs, dag ins, string opcodestr, string argstr, list<dag> pattern, InstFormat format> : Instruction {
+class RXInst<RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr, list<dag> pattern, InstFormat format> : Instruction {
   let Namespace = "RISCX";
 
   dag OutOperandList = outs;
@@ -43,17 +43,18 @@ class RXInst<dag outs, dag ins, string opcodestr, string argstr, list<dag> patte
   let TSFlags{4-0} = format.Value;
 
   field bits<32> Inst;
+  let Inst{6-0} = opcode.Value;
   let Size = 4;
 }
 
 class Pseudo<dag outs, dag ins, list<dag> pattern, string opcodestr = "", string argstr = "">
-    : RXInst<outs, ins, opcodestr, argstr, pattern, InstFormatPseudo> {
+    : RXInst<RISCXOpcode<"", 0>, outs, ins, opcodestr, argstr, pattern, InstFormatPseudo> {
   let isPseudo = 1;
   let isCodeGenOnly = 1;
 }
 
 class RXInstRBase<bits<3> funct3, RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr>
-    : RXInst<outs, ins, opcodestr, argstr, [], InstFormatR> {
+    : RXInst<opcode, outs, ins, opcodestr, argstr, [], InstFormatR> {
   bits<5> rs2;
   bits<5> rs1;
   bits<5> rd;
@@ -62,7 +63,6 @@ class RXInstRBase<bits<3> funct3, RISCXOpcode opcode, dag outs, dag ins, string 
   let Inst{19-15} = rs1;
   let Inst{14-12} = funct3;
   let Inst{11-7} = rd;
-  let Inst{6-0} = opcode.Value;
 }
 
 class RXInstR<bits<7> funct7, bits<3> funct3, RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr>
@@ -72,14 +72,13 @@ class RXInstR<bits<7> funct7, bits<3> funct3, RISCXOpcode opcode, dag outs, dag 
 
 
 class RXInstIBase<bits<3> funct3, RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr>
-    : RXInst<outs, ins, opcodestr, argstr, [], InstFormatI> {
+    : RXInst<opcode, outs, ins, opcodestr, argstr, [], InstFormatI> {
   bits<5> rs1;
   bits<5> rd;
 
   let Inst{19-15} = rs1;
   let Inst{14-12} = funct3;
   let Inst{11-7} = rd;
-  let Inst{6-0} = opcode.Value;
 }
 
 class RXInstI<bits<3> funct3, RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr>
@@ -107,7 +106,7 @@ class RXInstIShiftW<bits<7> imm11_5, bits<3> funct3, RISCXOpcode opcode, dag out
 }
 
 class RXInstS<bits<3> funct3, RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr>
-    : RXInst<outs, ins, opcodestr, argstr, [], InstFormatS> {
+    : RXInst<opcode, outs, ins, opcodestr, argstr, [], InstFormatS> {
   bits<12> imm12;
   bits<5> rs2;
   bits<5> rs1;
@@ -117,11 +116,10 @@ class RXInstS<bits<3> funct3, RISCXOpcode opcode, dag outs, dag ins, string opco
   let Inst{19-15} = rs1;
   let Inst{14-12} = funct3;
   let Inst{11-7} = imm12{4-0};
-  let Inst{6-0} = opcode.Value;
 }
 
 class RXInstB<bits<3> funct3, RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr>
-    : RXInst<outs, ins, opcodestr, argstr, [], InstFormatB> {
+    : RXInst<opcode, outs, ins, opcodestr, argstr, [], InstFormatB> {
   bits<12> imm12;
   bits<5> rs2;
   bits<5> rs1;
@@ -133,21 +131,19 @@ class RXInstB<bits<3> funct3, RISCXOpcode opcode, dag outs, dag ins, string opco
   let Inst{14-12} = funct3;
   let Inst{11-8} = imm12{3-0};
   let Inst{7} = imm12{10};
-  let Inst{6-0} = opcode.Value;
 }
 
 class RXInstU<RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr>
-    : RXInst<outs, ins, opcodestr, argstr, [], InstFormatU> {
+    : RXInst<opcode, outs, ins, opcodestr, argstr, [], InstFormatU> {
   bits<20> imm20;
   bits<5> rd;
 
   let Inst{31-12} = imm20;
   let Inst{11-7} = rd;
-  let Inst{6-0} = opcode.Value;
 }
 
 class RXInstJ<RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr>
-    : RXInst<outs, ins, opcodestr, argstr, [], InstFormatJ> {
+    : RXInst<opcode, outs, ins, opcodestr, argstr, [], InstFormatJ> {
   bits<20> imm20;
   bits<5> rd;
 
@@ -156,5 +152,4 @@ class RXInstJ<RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string ar
   let Inst{20} = imm20{10};
   let Inst{19-12} = imm20{18-11};
   let Inst{11-7} = rd;
-  let Inst{6-0} = opcode.Value;
 }

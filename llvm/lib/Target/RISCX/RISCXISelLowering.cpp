@@ -17,6 +17,7 @@
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/IntrinsicsRISCX.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/Support/Debug.h"
@@ -81,6 +82,8 @@ RISCXTargetLowering::RISCXTargetLowering(const TargetMachine &TM, const RISCXSub
   setOperationAction({ISD::GlobalAddress, ISD::BlockAddress, ISD::ConstantPool, ISD::JumpTable}, XLenVT, Custom);
 
   setOperationAction(ISD::Constant, MVT::i64, Custom);
+
+  setOperationAction(ISD::INTRINSIC_VOID, MVT::i32, Custom);
 
   setBooleanContents(ZeroOrOneBooleanContent);
 }
@@ -1337,15 +1340,7 @@ SDValue RISCXTargetLowering::LowerCall(CallLoweringInfo &CLI, SmallVectorImpl<SD
 
   SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
 
-  if (calleeName == "simPutPixel") {
-    Chain = DAG.getNode(RISCXISD::SIM_PUT_PIXEL, DL, NodeTys, Ops);
-  } else if (calleeName == "simFlush") {
-    Chain = DAG.getNode(RISCXISD::SIM_FLUSH, DL, NodeTys, Ops);
-  } else if (calleeName == "simRand") {
-    Chain = DAG.getNode(RISCXISD::SIM_RAND, DL, NodeTys, Ops);
-  } else {
-    Chain = DAG.getNode(RISCXISD::CALL, DL, NodeTys, Ops);
-  }
+  Chain = DAG.getNode(RISCXISD::CALL, DL, NodeTys, Ops);
   
   if (CLI.CFIType)
     Chain.getNode()->setCFIType(CLI.CFIType->getZExtValue());
@@ -1433,9 +1428,6 @@ const char *RISCXTargetLowering::getTargetNodeName(unsigned Opcode) const {
     break;
   NODE_NAME_CASE(RET_GLUE)
   NODE_NAME_CASE(CALL)
-  NODE_NAME_CASE(SIM_PUT_PIXEL)
-  NODE_NAME_CASE(SIM_FLUSH)
-  NODE_NAME_CASE(SIM_RAND)
   NODE_NAME_CASE(SELECT_CC)
   NODE_NAME_CASE(BR_CC)
   NODE_NAME_CASE(ADD_LO)
