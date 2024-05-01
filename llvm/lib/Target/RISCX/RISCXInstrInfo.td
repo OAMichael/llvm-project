@@ -373,14 +373,16 @@ def REMW    : ALUW_rr<0b0000001, 0b110, "remw">;
 def REMUW   : ALUW_rr<0b0000001, 0b111, "remuw">;
 
 // Sim put pixel
-def PUT_PIXEL : RXInst<OPC_PUT_PIXEL, (outs), (ins GPR:$rs1, GPR:$rs2, GPR:$rs3),
-                       "put.pixel", "$rs1 $rs2 $rs3", [(int_riscx_putpixel GPR:$rs1, GPR:$rs2, GPR:$rs3)], InstFormatOther>;
+def PUT_PIXEL : RXInstGraphics<OPC_PUT_PIXEL, (outs), (ins GPR:$rs1, GPR:$rs2, GPR:$rd),
+                       "put.pixel", "$rs1 $rs2 $rd", [(int_riscx_putpixel GPR:$rs1, GPR:$rs2, GPR:$rd)]>;
 
 // Sim flush
-def FLUSH : RXInst<OPC_FLUSH, (outs), (ins), "flush", "", [(int_riscx_flush)], InstFormatOther>;
+let rs1 = 0, rs2 = 0, rd = 0 in
+def FLUSH : RXInstGraphics<OPC_FLUSH, (outs), (ins), "flush", "", [(int_riscx_flush)]>;
 
 // Sim rand
-def RAND : RXInst<OPC_RAND, (outs GPR:$rd), (ins), "rand", "$rd", [(set GPR:$rd, (int_riscx_rand))], InstFormatOther>;
+let rs1 = 0, rs2 = 0 in
+def RAND : RXInstGraphics<OPC_RAND, (outs GPR:$rd), (ins), "rand", "$rd", [(set GPR:$rd, (int_riscx_rand))]>;
 
 def LWU   : Load_ri<0b110, "lwu">;
 def LD    : Load_ri<0b011, "ld">;

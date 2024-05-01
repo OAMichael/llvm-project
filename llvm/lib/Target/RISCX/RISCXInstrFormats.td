@@ -47,6 +47,17 @@ class RXInst<RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string arg
   let Size = 4;
 }
 
+class RXInstGraphics<RISCXOpcode opcode, dag outs, dag ins, string opcodestr, string argstr, list<dag> pattern>
+    : RXInst<opcode, outs, ins, opcodestr, argstr, pattern, InstFormatOther> {
+  bits<5> rs2;
+  bits<5> rs1;
+  bits<5> rd;
+
+  let Inst{24-20} = rs2;
+  let Inst{19-15} = rs1;
+  let Inst{11-7} = rd;
+}
+
 class Pseudo<dag outs, dag ins, list<dag> pattern, string opcodestr = "", string argstr = "">
     : RXInst<RISCXOpcode<"", 0>, outs, ins, opcodestr, argstr, pattern, InstFormatPseudo> {
   let isPseudo = 1;

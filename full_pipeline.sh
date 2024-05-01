@@ -25,7 +25,7 @@ cat ${SCRIPT_DIR}/riscx-tests/frontend/${TEST_APP}.lang | ./MyLang > ${SCRIPT_DI
 echo "Converting LLVM IR to machine code..."
 
 cd ${SCRIPT_DIR}
-mkdir riscx-tests/binary
+mkdir -p riscx-tests/binary
 ./build/bin/llc riscx-tests/backend/${TEST_APP}.ll -o riscx-tests/binary/${TEST_APP}.o -march=riscx -filetype=obj
 ld.lld riscx-tests/binary/${TEST_APP}.o -o riscx-tests/binary/${TEST_APP} --entry=app
 rm riscx-tests/binary/${TEST_APP}.o
